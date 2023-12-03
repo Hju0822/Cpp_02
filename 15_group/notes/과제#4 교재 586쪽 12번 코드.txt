@@ -1,0 +1,121 @@
+#include <iostream>
+
+class Ingredient {
+public:
+    virtual void use() = 0;
+    virtual void refill() = 0;
+    virtual int getQuantity() const = 0;
+};
+
+class CoffeeIngredient : public Ingredient {
+public:
+    void use() override {
+        if (quantity > 0) {
+            quantity--;
+        }
+    }
+
+    void refill() override {
+        quantity = maxQuantity;
+    }
+
+    int getQuantity() const override {
+        return quantity;
+    }
+
+private:
+    int quantity = 3;
+    const int maxQuantity = 3;
+};
+
+class CoffeeMachine {
+public:
+    CoffeeMachine() {
+        for (int i = 0; i < ingredientCount; ++i) {
+            ingredients[i] = new CoffeeIngredient();
+        }
+    }
+
+    ~CoffeeMachine() {
+        for (int i = 0; i < ingredientCount; ++i) {
+            delete ingredients[i];
+        }
+    }
+
+    void displayStatus() const {
+        std::cout << "------명품 커피 자판기켭니다.------" << std::endl;
+        for (int i = 0; i < ingredientCount; ++i) {
+            std::cout << ingredientNames[i] << " ";
+            for (int j = 0; j < ingredients[i]->getQuantity(); ++j) {
+                std::cout << "*";
+            }
+            std::cout << std::endl;
+        }
+    }
+
+    void makeCoffee(int type) {
+        bool isOutOfStock = false;
+        if (type >= 0 && type < coffeeTypes) {
+            for (int i = 0; i < ingredientCount; ++i) {
+                if (typeIngredients[type][i] && ingredients[i]->getQuantity() == 0) {
+                    isOutOfStock = true;
+                    break;
+                }
+            }
+
+            if (!isOutOfStock) {
+                std::cout << "맛있는 " << coffeeTypeNames[type] << " 나왔습니다~~" << std::endl;
+                for (int i = 0; i < ingredientCount; ++i) {
+                    if (typeIngredients[type][i]) {
+                        ingredients[i]->use();
+                    }
+                }
+            }
+            else {
+                std::cout << "해당 커피는 품절입니다~~" << std::endl;
+            }
+        }
+        else if (type == refillCode) {
+            std::cout << "모든 통을 채웁니다.~~" << std::endl;
+            for (int i = 0; i < ingredientCount; ++i) {
+                ingredients[i]->refill();
+            }
+        }
+    }
+
+private:
+    static const int ingredientCount = 5;
+    static const int coffeeTypes = 3;
+    static const int refillCode = 3;
+
+    const char* ingredientNames[ingredientCount] = { "Coffee", "Sugar", "CREAM", "Water", "Cup" };
+    const char* coffeeTypeNames[coffeeTypes] = { "보통 커피", "설탕 커피", "블랙 커피" };
+
+    bool typeIngredients[coffeeTypes][ingredientCount] = {
+        {1, 0, 1, 1, 1},
+        {1, 1, 0, 1, 1},
+        {1, 0, 0, 1, 1}
+    };
+
+    Ingredient* ingredients[ingredientCount];
+};
+
+int main() {
+    CoffeeMachine coffeeMachine;
+
+    while (true) {
+        coffeeMachine.displayStatus();
+
+        int choice;
+        std::cout << "보통 커피:0, 설탕 커피:1, 블랙커피:2, 채우기:3, 종료:4>> ";
+        std::cin >> choice;
+
+        if (choice == 4) {
+            break;
+        }
+
+        coffeeMachine.makeCoffee(choice);
+    }
+
+    return 0;
+}
